@@ -12,11 +12,51 @@ app.use(express.json());
 app.get('/api/categories', async (req, res) => {
   try {
     const response = await axios.get(`https://api.themoviedb.org/3/genre/movie/list`, {
-      params: { api_key: process.env.TMDB_API_KEY },
+      params: { api_key: process.env.TMDB_API_KEY, language: 'pt-BR' },
     });
     res.json(response.data.genres);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+app.get('/api/highlights', async (req, res) => {
+  try {
+    const response = await axios.get(`https://api.themoviedb.org/3/movie/now_playing`, {
+      params: { api_key: process.env.TMDB_API_KEY, language: 'en-US', page: 1 },
+    });
+    res.json(response.data.results);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch highlights' });
+  }
+});
+
+app.get('/api/trending', async (req, res) => {
+  try {
+    const response = await axios.get(`https://api.themoviedb.org/3/trending/movie/week`, {
+      params: { api_key: process.env.TMDB_API_KEY },
+    });
+    res.json(response.data.results);
+  } catch (error) {
+    console.error('Failed to fetch trending movies:', error);
+    res.status(500).json({ error: 'Failed to fetch trending movies' });
+  }
+});
+
+app.get('/api/recommendations', async (req, res) => {
+  const { genreIds } = req.query;
+
+  try {
+    const response = await axios.get(`https://api.themoviedb.org/3/discover/movie`, {
+      params: {
+        api_key: process.env.TMDB_API_KEY,
+        with_genres: genreIds,
+      },
+    });
+    res.json(response.data.results);
+  } catch (error) {
+    console.error('Failed to fetch recommendations:', error);
+    res.status(500).json({ error: 'Failed to fetch recommendations' });
   }
 });
 
