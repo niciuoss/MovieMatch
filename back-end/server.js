@@ -43,20 +43,25 @@ app.get('/api/trending', async (req, res) => {
   }
 });
 
-app.get('/api/recommendations', async (req, res) => {
-  const { genreIds } = req.query;
+router.get('/recommendations', async (req, res) => {
+  const genreIds = req.query.genreIds;
+
+  if (!genreIds) {
+    return res.status(400).send('Genres parameter is required');
+  }
 
   try {
-    const response = await axios.get(`https://api.themoviedb.org/3/discover/movie`, {
+    const response = await axios.get('https://api.themoviedb.org/3/discover/movie', {
       params: {
-        api_key: process.env.TMDB_API_KEY,
+        api_key: 'c38a7e8f0fffa6d905b202e01ad8f27b',
         with_genres: genreIds,
       },
     });
+
     res.json(response.data.results);
   } catch (error) {
-    console.error('Failed to fetch recommendations:', error);
-    res.status(500).json({ error: 'Failed to fetch recommendations' });
+    console.error('Error fetching recommendations:', error);
+    res.status(500).send('Error fetching recommendations');
   }
 });
 

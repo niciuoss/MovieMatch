@@ -12,7 +12,7 @@ export function Header() {
     <div className="bg-primary">
       <div className="h-16 flex items-center gap-6 px-4 md:px-6">
         <h1 className="text-2xl font-semibold text-white">Movie Match</h1>
-        <Video className="h-10 w-10 lg:h-[3.4rem] lg:w-[3.4rem] text-white"/>
+        <Video className="h-0 w-0 lg:h-[3.4rem] lg:w-[3.4rem] text-white"/>
         <Separator orientation="vertical" className="h-6 hidden md:block"/>
 
         <nav className="flex items-center space-x-4 md:space-x-6 flex-1">
@@ -26,8 +26,12 @@ export function Header() {
           <Separator orientation="vertical" className="h-6 hidden md:block"/>
           
           <div className="relative flex items-center flex-1">
-            <Search className="absolute left-3 text-gray-400" />
-            <Input type="text" placeholder="Buscar" className="pl-10 rounded-full w-full" />
+            <Search className="absolute left-3 text-white md:text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Buscar"
+              className="pl-10 rounded-full w-0 md:w-[20rem] transition-width duration-300"
+            />
           </div>
         </nav>
 

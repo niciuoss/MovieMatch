@@ -2,14 +2,10 @@ import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Play } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 export function Home() {
   const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
@@ -52,9 +48,12 @@ export function Home() {
   }, []);
 
   useEffect(() => {
-    if (selectedCategories.length === 0) return;
-
     const fetchRecommendations = async () => {
+      if (selectedCategories.length === 0) {
+        setRecommendations([]); 
+        return;
+      }
+
       try {
         const response = await axios.get('/api/recommendations', {
           params: { genreIds: selectedCategories.join(',') },
@@ -84,7 +83,8 @@ export function Home() {
     <div className='container mx-auto px-4'>
       <Helmet title='Home' />
 
-      <h1 className='text-3xl font-bold pb-2'>Selecione seus gêneros favoritos</h1>
+      <h1 className='text-3xl font-bold'>Selecione seus gêneros favoritos</h1>
+      <h3 className='pb-2 text-muted-foreground text-sm'>Receba uma lista de recomendações personalizadas para você a partir dos gêneros que você selecionou.</h3>
       <div className="flex flex-wrap gap-2 pt-2">
         {categories.map((category) => (
           <Badge
@@ -99,46 +99,87 @@ export function Home() {
         ))}
       </div>
 
-      <h2 className='text-2xl font-bold mt-8'>Destaques</h2>
       <div className="flex flex-wrap gap-4 mt-4">
-        {highlights.map((movie) => (
-          <Card key={movie.id} className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5">
+        {recommendations.map((movie) => (
+          <Card key={movie.id} className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 flex flex-col">
             <CardHeader>
               <CardTitle>
-              <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="w-full h-auto" />
+                <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="w-full h-auto rounded-md" />
               </CardTitle>
-              <CardDescription>{movie.title}</CardDescription>
+              <CardDescription>
+                <p>{movie.genre_ids}</p>
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p>{movie.genre_ids}</p>
+            <CardContent className='flex-grow font-semibold text-xl'>
+              {movie.title}
             </CardContent>
-            <CardFooter>
-              <p>Trailer ou outros detalhes</p>
+            <CardFooter className="mt-auto">
+              <Button className='gap-2 w-full justify-center'>
+                Trailer ou outros detalhes
+                <Play/>
+              </Button>
             </CardFooter>
           </Card>
         ))}
       </div>
 
+      <div className='pt-10 lg:w-[71.45rem]'>
+        <Separator/>
+      </div>
+
+      <h2 className='text-2xl font-bold mt-8'>Destaques</h2>
+      <div className="flex flex-wrap gap-4 mt-4">
+        {highlights.map((movie) => (
+          <Card key={movie.id} className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 flex flex-col">
+            <CardHeader>
+              <CardTitle>
+              <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="w-full h-auto rounded-md" />
+              </CardTitle>
+              <CardDescription>
+                <p>{movie.genre_ids}</p>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='flex-grow font-semibold text-xl'>
+              {movie.title}
+            </CardContent>
+            <CardFooter className="mt-auto">
+              <Button className='gap-2 w-full justify-center'>
+                Trailer ou outros detalhes
+                <Play/>
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+
+      <div className='pt-10 lg:w-[71.45rem]'>
+        <Separator/>
+      </div>
+
       <h2 className='text-2xl font-bold mt-8'>Filmes em Alta</h2>
       <div className="flex flex-wrap gap-4 mt-4">
         {trendingMovies.map((movie) => (
-          <div key={movie.id} className="w-48">
-            <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="w-full h-auto" />
-            <p className="mt-2 text-center">{movie.title}</p>
-          </div>
+          <Card key={movie.id} className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 flex flex-col">
+            <CardHeader>
+              <CardTitle>
+                <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="w-full h-auto rounded-md" />
+              </CardTitle>
+              <CardDescription>
+                <p>{movie.genre_ids}</p>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className='flex-grow font-semibold text-xl'>
+              {movie.title}
+            </CardContent>
+            <CardFooter className="mt-auto">
+              <Button className='gap-2 w-full justify-center'>
+                Trailer ou outros detalhes
+                <Play/>
+              </Button>
+            </CardFooter>
+          </Card>
         ))}
       </div>
-
-      <h2 className='text-2xl font-bold mt-8'>Recomendações Personalizadas</h2>
-      <div className="flex flex-wrap gap-4 mt-4">
-        {recommendations.map((movie) => (
-          <div key={movie.id} className="w-48">
-            <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="w-full h-auto" />
-            <p className="mt-2 text-center">{movie.title}</p>
-          </div>
-        ))}
-      </div>
-
     </div>
   );
 }
