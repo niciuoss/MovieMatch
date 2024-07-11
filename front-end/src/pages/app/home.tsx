@@ -23,100 +23,120 @@ import { Button } from '@/components/ui/button'
 import { Play } from 'lucide-react'
 import { Separator } from '@/components/ui/separator'
 
+interface Video {
+  key: string;
+  site: string;
+}
+
 export function Home() {
-  const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([]);
-  const [selectedCategories, setSelectedCategories] = useState<Array<number>>([]);
-  const [highlights, setHighlights] = useState<Array<{ id: number; title: string; poster_path: string; overview: string  }>>([]);
-  const [trendingMovies, setTrendingMovies] = useState<Array<{ id: number; title: string; poster_path: string; overview: string }>>([]);
-  const [recommendations, setRecommendations] = useState<Array<{ id: number; title: string; poster_path: string; overview: string; genre_ids: number[] }>>([]);
-  const [genreMap, setGenreMap] = useState<{ [key: number]: string }>({});
-  const [favoriteMovies, setFavoriteMovies] = useState(new Set());
-  const [movieVideos, setMovieVideos] = useState<{ [key: number]: { key: string, site: string } | null }>({});
+
+  const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([])
+  const [selectedCategories, setSelectedCategories] = useState<Array<number>>([])
+  const [highlights, setHighlights] = useState<Array<{ id: number; title: string; poster_path: string; overview: string  }>>([])
+  const [trendingMovies, setTrendingMovies] = useState<Array<{ id: number; title: string; poster_path: string; overview: string }>>([])
+  const [recommendations, setRecommendations] = useState<Array<{ id: number; title: string; poster_path: string; overview: string; genre_ids: number[] }>>([])
+  const [genreMap, setGenreMap] = useState<{ [key: number]: string }>({})
+  const [favoriteMovies, setFavoriteMovies] = useState(new Set())
+  const [movieVideos, setMovieVideos] = useState<{ [key: number]: Video | null }>({});
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const findCategories = async () => {
       try {
-        const response = await axios.get('/api/categories');
-        setCategories(response.data);
+        const response = await axios.get('/api/categories')
+        setCategories(response.data)
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error('Error fetching categories:', error)
       }
     };
 
-    const fetchHighlights = async () => {
+    const showHighlights = async () => {
       try {
-        const response = await axios.get('/api/highlights');
-        setHighlights(response.data);
+        const response = await axios.get('/api/highlights')
+        setHighlights(response.data)
       } catch (error) {
-        console.error('Error fetching highlights:', error);
+        console.error('Error fetching highlights:', error)
       }
     };
 
-    const fetchTrendingMovies = async () => {
+    const findTrendingMovies = async () => {
       try {
-        const response = await axios.get('/api/trending');
-        setTrendingMovies(response.data);
+        const response = await axios.get('/api/trending')
+        setTrendingMovies(response.data)
       } catch (error) {
-        console.error('Error fetching trending movies:', error);
+        console.error('Error fetching trending movies:', error)
       }
     };
 
-    const fetchGenres = async () => {
+    const findGenres = async () => {
       try {
         const response = await axios.get('/api/genres');
-        const genres = response.data;
+        const genres = response.data
         const genreMap = genres.reduce((acc: { [key: number]: string }, genre: { id: number; name: string }) => {
-          acc[genre.id] = genre.name;
-          return acc;
-        }, {});
+          acc[genre.id] = genre.name
+          return acc
+        }, {})
         setGenreMap(genreMap);
       } catch (error) {
-        console.error('Error fetching genres:', error);
+        console.error('Error fetching genres:', error)
       }
-    };
+    }
 
-    fetchCategories();
-    fetchHighlights();
-    fetchTrendingMovies();
-    fetchGenres();
+    findCategories()
+    showHighlights()
+    findTrendingMovies()
+    findGenres()
   }, []);
 
   useEffect(() => {
     const fetchRecommendations = async () => {
       if (selectedCategories.length === 0) {
-        setRecommendations([]);
-        return;
+        setRecommendations([])
+        return
       }
 
       try {
         const response = await axios.get('/api/recommendations', {
           params: { genreIds: selectedCategories.join(',') },
-        });
+        })
         if (Array.isArray(response.data)) {
-          setRecommendations(response.data);
+          setRecommendations(response.data)
         } else {
-          console.error('Unexpected response format:', response.data);
+          console.error('Unexpected response format:', response.data)
         }
       } catch (error) {
-        console.error('Error fetching recommendations:', error);
+        console.error('Error fetching recommendations:', error)
       }
     };
 
-    fetchRecommendations();
-  }, [selectedCategories]);
+    fetchRecommendations()
+  }, [selectedCategories])
 
   useEffect(() => {
     const fetchAllVideos = async () => {
-      const videosMap = {};
-      for (const movie of recommendations) {
-        const video = await fetchMovieVideos(movie.id);
-        videosMap[movie.id] = video;
-      }
-      setMovieVideos(videosMap);
-    };
+      const allMovies = [...recommendations, ...highlights, ...trendingMovies];
+      const videosMap: { [key: number]: Video | null } = {}
 
-    fetchAllVideos();
-  }, [recommendations]);
+      for (const movie of allMovies) {
+        const video = await fetchMovieVideos(movie.id)
+        videosMap[movie.id] = video
+      }
+
+      setMovieVideos(videosMap)
+    }
+  
+    fetchAllVideos()
+  }, [recommendations, highlights, trendingMovies])
+
+  const fetchMovieVideos = async (movieId: number) => {
+    try {
+      const response = await axios.get(`/api/movies/${movieId}/videos`)
+      const videos = response.data
+      return videos.find((video: { type: string; site: string }) => video.type === 'Trailer' && video.site === 'YouTube')
+    } catch (error) {
+      console.error('Error fetching movie videos:', error)
+      return null
+    }
+  };
 
   const handleCategorySelect = (id: number) => {
     setSelectedCategories((prevSelected) =>
@@ -126,20 +146,20 @@ export function Home() {
     );
   };
 
-  const toggleFavorite = (movieId) => {
+  const toggleFavorite = (movieId: number) => {
     setFavoriteMovies((prevFavorites) => {
-      const newFavorites = new Set(prevFavorites);
+      const newFavorites = new Set(prevFavorites)
       if (newFavorites.has(movieId)) {
-        newFavorites.delete(movieId);
+        newFavorites.delete(movieId)
       } else {
-        newFavorites.add(movieId);
+        newFavorites.add(movieId)
       }
-      return newFavorites;
-    });
-  };
+      return newFavorites
+    })
+  }
 
   const getGenreNames = (genreIds: number[]) => {
-    return genreIds.map(id => genreMap[id]).filter(Boolean).join(', ');
+    return genreIds.map(id => genreMap[id]).filter(Boolean).join(', ')
   };
 
   return (
@@ -194,14 +214,14 @@ export function Home() {
                         <iframe 
                           width="100%" 
                           height="315" 
-                          src={`https://www.youtube.com/embed/${movieVideos[movie.id].key}`} 
+                          src={`https://www.youtube.com/embed/${movieVideos[movie.id]?.key}`} 
                           title="YouTube video player" 
                           frameBorder="0" 
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                           allowFullScreen>
                         </iframe>
                       ) : (
-                        <p>Trailer não disponível</p>
+                        <p className='text-2xl font-semibold'>Trailer não disponível :(</p>
                       )}
                     </DialogDescription>
                   </DialogHeader>
@@ -220,13 +240,13 @@ export function Home() {
       <div className="flex flex-wrap gap-4 mt-4">
         {highlights.map((movie) => (
           <Card key={movie.id} className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 flex flex-col">
-            <CardHeader>
+            <CardHeader className="relative">
+              <div className='absolute top-2 right-2 cursor-pointer' onClick={() => toggleFavorite(movie.id)}>
+              {favoriteMovies.has(movie.id) ? <FaHeart className='text-red-500' /> : <FaRegHeart className='text-gray-500' />}
+              </div>
               <CardTitle>
                 <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="w-full h-auto rounded-md" />
               </CardTitle>
-              <CardDescription>
-                <p>{getGenreNames(movie.genre_ids)}</p>
-              </CardDescription>
             </CardHeader>
             <CardContent className='flex-grow font-semibold text-xl'>
               {movie.title}
@@ -248,14 +268,14 @@ export function Home() {
                         <iframe 
                           width="100%" 
                           height="315" 
-                          src={`https://www.youtube.com/embed/${movieVideos[movie.id].key}`} 
+                          src={`https://www.youtube.com/embed/${movieVideos[movie.id]?.key}`} 
                           title="YouTube video player" 
                           frameBorder="0" 
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                           allowFullScreen>
                         </iframe>
                       ) : (
-                        <p>Trailer não disponível</p>
+                        <p className='text-2xl font-semibold'>Trailer não disponível :(</p>
                       )}
                     </DialogDescription>
                   </DialogHeader>
@@ -274,13 +294,13 @@ export function Home() {
       <div className="flex flex-wrap gap-4 mt-4">
         {trendingMovies.map((movie) => (
           <Card key={movie.id} className="w-1/2 md:w-1/3 lg:w-1/4 xl:w-1/5 flex flex-col">
-            <CardHeader>
+            <CardHeader className="relative">
+              <div className='absolute top-2 right-2 cursor-pointer' onClick={() => toggleFavorite(movie.id)}>
+              {favoriteMovies.has(movie.id) ? <FaHeart className='text-red-500' /> : <FaRegHeart className='text-gray-500' />}
+              </div>
               <CardTitle>
                 <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="w-full h-auto rounded-md" />
               </CardTitle>
-              <CardDescription>
-                <p>{getGenreNames(movie.genre_ids)}</p>
-              </CardDescription>
             </CardHeader>
             <CardContent className='flex-grow font-semibold text-xl'>
               {movie.title}
@@ -298,19 +318,18 @@ export function Home() {
                     <DialogTitle>{movie.title}</DialogTitle>
                     <DialogDescription>
                       {movie.overview}
-                      <Separator/>
                       {movieVideos[movie.id] ? (
                         <iframe 
                           width="100%" 
                           height="315" 
-                          src={`https://www.youtube.com/embed/${movieVideos[movie.id].key}`} 
+                          src={`https://www.youtube.com/embed/${movieVideos[movie.id]?.key}`} 
                           title="YouTube video player" 
                           frameBorder="0" 
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                           allowFullScreen>
                         </iframe>
                       ) : (
-                        <p>Trailer não disponível</p>
+                        <p className='text-2xl font-semibold'>Trailer não disponível :( </p>
                       )}
                     </DialogDescription>
                   </DialogHeader>
@@ -321,5 +340,5 @@ export function Home() {
         ))}
       </div>
     </div>
-  );
+  )
 }

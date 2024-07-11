@@ -64,6 +64,20 @@ app.get('/api/trending', async (req, res) => {
   }
 });
 
+app.get('/api/movies/:id/videos', async (req, res) => {
+  const movieId = req.params.id;
+
+  try {
+    const response = await axios.get(`https://api.themoviedb.org/3/movie/${movieId}/videos`, {
+      params: { api_key: process.env.TMDB_API_KEY, language: 'pt-BR' },
+    });
+    res.json(response.data.results);
+  } catch (error) {
+    console.error('Error fetching movie videos:', error);
+    res.status(500).send('Error fetching movie videos');
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
